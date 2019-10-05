@@ -1,0 +1,123 @@
+
+
+<html>
+<head>
+<title>Matrix Application Launcher</title>
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<link rel="stylesheet" type="text/css" href="css/fonts-min.css">
+<script type="text/javascript" src="/javascript/jquery-latest.js"></script>   
+<link rel='stylesheet' type='text/css' href='css/global.css'>
+
+</head>
+
+
+<body class="unselectable" style = "-webkit-user-select: none;-moz-user-select: none;">
+<div id = "complete_container"></div>
+
+<script>
+var has_graphics = true;
+var link_history = ["submenu.php?submenu=main_menu&page=0"];
+var uri = "submenu.php?submenu=main_menu&page=0";
+var previous_clicked = uri;
+
+var client_is_host = false;
+$(document).ready(function()
+{
+
+
+
+	var supportedResolutions=new Array(); 
+
+	supportedResolutions[0]="800x600x4x3";supportedResolutions[1]="800x480x4x3";supportedResolutions[2]="640x480x4x3";supportedResolutions[3]="480x272x4x2";
+	var screenWidth = 0;
+	var screenHeight = 0;
+	var iconGridCol = 0;
+	var iconGridRow = 0;
+
+	for(var i=0; i<supportedResolutions.length; i++) 
+	{
+		var value = supportedResolutions[i].split('x');
+
+		screenWidth = value[0];
+		screenHeight = value[1];
+		iconGridCol = value[2];
+		iconGridRow = value[3];
+
+		if(screen.width >= screenWidth && screen.height >= screenHeight)
+			break;
+	}
+
+	document.cookie="iconGridCol="+iconGridCol;
+	document.cookie="iconGridRow="+iconGridRow;
+	
+	$('head').append('<link rel="stylesheet" type="text/css" href="/css/'+screenWidth+'x'+screenHeight+'.css" />'); 
+
+	if(client_is_host==false)
+	{
+			has_graphics = true;
+	}
+
+	$.get(uri, function(data) 
+	{
+				$('#complete_container').html(data);
+				$("#back_link").attr("href",link_history[link_history.length-2]);
+	});
+
+
+});
+
+
+
+
+
+
+
+$("#complete_container").delegate("img", "mousedown", function(e)
+{
+       e.preventDefault();
+});
+
+$("#complete_container").delegate("a", "click", function(e)
+{
+	e.preventDefault();
+	e.stopPropagation();
+	var className = $(this).attr('class');
+	var idName = $(this).attr('id');
+	var link =  $(this).attr('href');
+
+	//Sometimes if a request is taking a long time you might try clicking a link more then once thinking that
+	//your click request was not accepted. This causes multiple request for the same page to be sent which in turn
+	//sometimes results in every link you click causing 2+ request to go through. This code checks to make sure
+	//your requesting a new pageand not the same page twice
+	if(link==previous_clicked)
+		return false;
+
+	previous_clicked = link;
+
+	if(idName=="back_link")
+	{
+		link_history.pop();
+	}
+	else if(idName=="main_menu_link")
+	{
+		link_history = ["submenu.php?submenu=main_menu&page=0"];
+	}
+	else
+		link_history.push(link);
+
+	//Adds a random string to the end of the $_GET Query String for page accessed.
+	//This prevents IE from caching the Ajax request.
+	link = link + "&rand="+Math.round((Math.random()*2356))+Math.round((Math.random()*4321))+Math.round((Math.random()*3961));
+	$.get(link, function(data) 
+	{
+		$('#complete_container').html(data);
+		$("#back_link").attr("href",link_history[link_history.length-2]);
+	});		
+});
+
+</script>
+
+	</body>
+</html>
+
